@@ -5,6 +5,8 @@ import Image from "next/image";
 
 export default function Home() {
 
+  const API = process.env.NEXT_PUBLIC_API_URL;
+
   const [form, setForm] = useState({
     idea: "",
     customer: "",
@@ -17,6 +19,7 @@ export default function Home() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [animatedScore, setAnimatedScore] = useState(0);
+  const [error, setError] = useState("");
 
   const handleChange = (e: any) => {
     setForm({
@@ -51,28 +54,40 @@ export default function Home() {
   // ======================
   const handleAnalyze = async () => {
 
+    if (!API) {
+      setError("API URL missing. Check Vercel env variables.");
+      return;
+    }
+
     setLoading(true);
     setResult(null);
+    setError("");
 
-    const res = await fetch("http://127.0.0.1:8000/dashboard/analyze", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        ...form,
-        mode: "existing",
-        strategy_mode: "growth",
-        team_size: Number(form.team_size)
-      })
-    });
+    try {
+      const res = await fetch(`${API}/dashboard/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          ...form,
+          mode: "existing",
+          strategy_mode: "growth",
+          team_size: Number(form.team_size)
+        })
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setTimeout(() => {
-      setResult(data);
+      setTimeout(() => {
+        setResult(data);
+        setLoading(false);
+      }, 700);
+
+    } catch (err) {
       setLoading(false);
-    }, 700); // fake AI thinking delay
+      setError("Failed to connect to backend.");
+    }
   };
 
   const Card = ({ title, score }: any) => (
@@ -128,9 +143,13 @@ export default function Home() {
           >
             {loading ? "🤖 AI Analyzing..." : "Analyze Startup Health"}
           </button>
+
+          {error && (
+            <p className="text-red-400 text-sm">{error}</p>
+          )}
         </div>
 
-        {/* LOADING STATE */}
+        {/* LOADING */}
         {loading && (
           <div className="mt-8 text-center text-gray-400 animate-pulse">
             AI is thinking...
@@ -139,7 +158,7 @@ export default function Home() {
 
         {/* RESULTS */}
         {result && (
-          <div className="space-y-6 mt-8 animate-fadeIn">
+          <div className="space-y-6 mt-8">
 
             <div className="bg-white/5 border border-white/10 p-10 rounded-3xl text-center">
               <p className="text-gray-400">Overall Health</p>
