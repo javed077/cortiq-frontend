@@ -21,33 +21,40 @@ export default function Home() {
   const [animatedScore, setAnimatedScore] = useState(0);
   const [error, setError] = useState("");
 
+  // ======================
+  // INPUT HANDLER
+  // ======================
   const handleChange = (e: any) => {
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
+    }));
   };
 
   // ======================
-  // SCORE ANIMATION
+  // SCORE ANIMATION (FIXED)
   // ======================
   useEffect(() => {
     if (!result) return;
 
-    let current = 0;
+    setAnimatedScore(0);
+
     const target = result.health_score;
+    let current = 0;
 
     const interval = setInterval(() => {
       current += 2;
+
       if (current >= target) {
         current = target;
         clearInterval(interval);
       }
+
       setAnimatedScore(current);
     }, 20);
 
     return () => clearInterval(interval);
-  }, [result]);
+  }, [result?.health_score]);
 
   // ======================
   // ANALYZE
@@ -64,6 +71,7 @@ export default function Home() {
     setError("");
 
     try {
+
       const res = await fetch(`${API}/dashboard/analyze`, {
         method: "POST",
         headers: {
@@ -76,6 +84,10 @@ export default function Home() {
           team_size: Number(form.team_size)
         })
       });
+
+      if (!res.ok) {
+        throw new Error("Backend error");
+      }
 
       const data = await res.json();
 
@@ -90,6 +102,9 @@ export default function Home() {
     }
   };
 
+  // ======================
+  // CARD COMPONENT
+  // ======================
   const Card = ({ title, score }: any) => (
     <div className="bg-white/5 border border-white/10 p-6 rounded-2xl transition hover:bg-white/10">
       <h3 className="text-gray-400">{title}</h3>
@@ -127,13 +142,16 @@ export default function Home() {
         <div className="bg-white/[0.03] border border-white/10 p-8 rounded-3xl space-y-3">
 
           {["idea","customer","pricing","team_size","budget","situation"].map((f)=>(
+
             <input
               key={f}
               name={f}
+              value={form[f as keyof typeof form]}
               placeholder={f.replace("_"," ").toUpperCase()}
               onChange={handleChange}
               className="w-full p-3 rounded-xl bg-black/40 border border-white/10"
             />
+
           ))}
 
           <button
@@ -147,6 +165,7 @@ export default function Home() {
           {error && (
             <p className="text-red-400 text-sm">{error}</p>
           )}
+
         </div>
 
         {/* LOADING */}
