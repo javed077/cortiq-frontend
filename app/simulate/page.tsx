@@ -12,8 +12,6 @@ const RED     = "#FF4444";
 const YELLOW  = "#FFB800";
 const CYAN    = "#00E5FF";
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
 function fmt(n: number) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}k`;
@@ -31,13 +29,11 @@ function buildSeries(budget: number, burn: number, growth: number, months = 36) 
   for (let i = 0; i <= months; i++) {
     rows.push({ month: `M${i}`, cash: Math.max(0, Math.round(cash)), burn: Math.round(b) });
     cash -= b;
-    b     = b * (1 - growth / 100);   // growth = burn reduction %
+    b     = b * (1 - growth / 100);
     if (cash <= 0) break;
   }
   return rows;
 }
-
-// ── custom tooltip ─────────────────────────────────────────────────────────────
 
 const ChartTip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -51,8 +47,6 @@ const ChartTip = ({ active, payload, label }: any) => {
   );
 };
 
-// ── slider ────────────────────────────────────────────────────────────────────
-
 function Slider({ label, value, min, max, step = 1, onChange, format = (v: number) => String(v), color = ACCENT }: any) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
@@ -62,23 +56,18 @@ function Slider({ label, value, min, max, step = 1, onChange, format = (v: numbe
         <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color, fontWeight: 700 }}>{format(value)}</span>
       </div>
       <div style={{ position: "relative", height: 20, display: "flex", alignItems: "center" }}>
-        {/* track */}
         <div style={{ position: "absolute", left: 0, right: 0, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2 }} />
-        {/* fill */}
         <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: 4, background: color, borderRadius: 2, boxShadow: `0 0 8px ${color}60` }} />
         <input
           type="range" min={min} max={max} step={step} value={value}
           onChange={e => onChange(Number(e.target.value))}
           style={{ position: "absolute", width: "100%", opacity: 0, cursor: "pointer", height: 20, margin: 0 }}
         />
-        {/* thumb */}
         <div style={{ position: "absolute", left: `calc(${pct}% - 8px)`, width: 16, height: 16, borderRadius: "50%", background: "#0D0D0D", border: `2px solid ${color}`, boxShadow: `0 0 8px ${color}80`, pointerEvents: "none", transition: "left 0.05s" }} />
       </div>
     </div>
   );
 }
-
-// ── stat card ─────────────────────────────────────────────────────────────────
 
 function Stat({ label, value, sub, color = "white" }: any) {
   return (
@@ -90,47 +79,47 @@ function Stat({ label, value, sub, color = "white" }: any) {
   );
 }
 
-// ── page ──────────────────────────────────────────────────────────────────────
-
 export default function SimulatePage() {
   const router = useRouter();
 
-  // pull saved form if available
-  const [budget, setBudget]   = useState(500_000);
-  const [burn,   setBurn]     = useState(25_000);
-  const [growth, setGrowth]   = useState(0);       // % burn reduction per month
+  const [budget,  setBudget]  = useState(500_000);
+  const [burn,    setBurn]    = useState(25_000);
+  const [growth,  setGrowth]  = useState(0);
+  const [pricing, setPricing] = useState(0); // stored in state — never read from localStorage during render
 
-  // scenario B toggles
   const [budgetB, setBudgetB] = useState(500_000);
   const [burnB,   setBurnB]   = useState(20_000);
   const [growthB, setGrowthB] = useState(5);
   const [compare, setCompare] = useState(false);
 
+  // localStorage is only safe inside useEffect (client-side only, never during SSR)
   useEffect(() => {
     const saved = localStorage.getItem("cortiq_form");
     if (saved) {
       const f = JSON.parse(saved);
       if (f.available_budget) { const b = Number(f.available_budget); setBudget(b); setBudgetB(b); }
       if (f.monthly_burn)     { const b = Number(f.monthly_burn);     setBurn(b);   setBurnB(Math.max(1000, b - 5000)); }
+      if (f.pricing)          { setPricing(Number(f.pricing)); }
     }
   }, []);
 
   const seriesA = buildSeries(budget, burn, growth);
   const seriesB = buildSeries(budgetB, burnB, growthB);
-  const rvwA    = runway(budget, burn);
-  const rvwB    = runway(budgetB, burnB);
 
-  // merge series for comparison chart
   const merged = Array.from({ length: Math.max(seriesA.length, seriesB.length) }, (_, i) => ({
-    month:  `M${i}`,
-    cashA:  seriesA[i]?.cash  ?? 0,
-    cashB:  seriesB[i]?.cash  ?? 0,
+    month: `M${i}`,
+    cashA: seriesA[i]?.cash ?? 0,
+    cashB: seriesB[i]?.cash ?? 0,
   }));
 
   const runwayMonthA = seriesA.length - 1;
   const runwayMonthB = seriesB.length - 1;
+  const statusColor  = (r: number) => r > 18 ? ACCENT : r > 9 ? YELLOW : RED;
 
-  const statusColor = (r: number) => r > 18 ? ACCENT : r > 9 ? YELLOW : RED;
+  // break-even computed from state — safe during SSR (pricing defaults to 0)
+  const breakEvenUnits = burn > 0 && pricing > 0
+    ? Math.ceil(burn / pricing).toLocaleString()
+    : "—";
 
   return (
     <>
@@ -145,6 +134,8 @@ export default function SimulatePage() {
         .fade-up { animation: fadeUp 0.4s ease both; }
         .panel { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:24px; }
         .panel:hover { border-color:rgba(255,255,255,0.11); transition:border-color 0.25s; }
+        .analyze-btn { width:100%; padding:16px; background:${ACCENT}; color:#050505; font-family:'Space Mono',monospace; font-weight:700; font-size:13px; letter-spacing:0.15em; text-transform:uppercase; border:none; border-radius:10px; cursor:pointer; transition:all 0.2s; }
+        .analyze-btn:hover { background:#d4ff33; transform:translateY(-1px); }
         .tag { display:inline-block; padding:3px 10px; background:rgba(200,255,0,0.10); border:1px solid rgba(200,255,0,0.25); border-radius:4px; font-family:'Space Mono',monospace; font-size:9px; color:${ACCENT}; letter-spacing:0.15em; text-transform:uppercase; }
         .toggle { display:inline-flex; border:1px solid rgba(255,255,255,0.1); border-radius:8px; overflow:hidden; }
         .toggle-btn { padding:7px 16px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.1em; cursor:pointer; border:none; transition:all 0.2s; }
@@ -153,7 +144,6 @@ export default function SimulatePage() {
       `}</style>
 
       <main style={{ minHeight: "100vh", background: "#050505", color: "white", padding: "40px 24px", position: "relative" }}>
-        {/* grid bg */}
         <div style={{ position: "fixed", inset: 0, backgroundImage: `linear-gradient(rgba(200,255,0,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(200,255,0,0.025) 1px,transparent 1px)`, backgroundSize: "60px 60px", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg,transparent,rgba(200,255,0,0.15),transparent)", animation: "scanline 8s linear infinite", pointerEvents: "none", zIndex: 0 }} />
 
@@ -188,10 +178,8 @@ export default function SimulatePage() {
             </div>
           </div>
 
-          {/* sliders + stats */}
+          {/* sliders */}
           <div style={{ display: "grid", gridTemplateColumns: compare ? "1fr 1fr" : "1fr", gap: 16, marginBottom: 16 }}>
-
-            {/* scenario A */}
             <div className="panel fade-up" style={{ animationDelay: "0.05s" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
                 <span className="tag">Scenario {compare ? "A" : "Current"}</span>
@@ -204,7 +192,6 @@ export default function SimulatePage() {
               </div>
             </div>
 
-            {/* scenario B */}
             {compare && (
               <div className="panel fade-up" style={{ animationDelay: "0.1s", borderColor: "rgba(0,229,255,0.15)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
@@ -220,13 +207,11 @@ export default function SimulatePage() {
             )}
           </div>
 
-          {/* stat row */}
+          {/* stat row — all values come from React state, never directly from localStorage */}
           <div style={{ display: "grid", gridTemplateColumns: compare ? "repeat(4,1fr)" : "repeat(3,1fr)", gap: 12, marginBottom: 16 }}>
             <Stat label="Runway A" value={`${runwayMonthA}mo`} sub={runwayMonthA >= 36 ? "36+ months" : `${fmt(budget - burn * runwayMonthA)} left`} color={statusColor(runwayMonthA)} />
             <Stat label="Monthly Burn A" value={fmt(burn)} sub={`${fmt(burn * 12)}/yr`} color={RED} />
-            <Stat label="Break-even Units" value={burn > 0 && (localStorage.getItem("cortiq_form") ? JSON.parse(localStorage.getItem("cortiq_form")!).pricing : 0) > 0
-              ? Math.ceil(burn / Number(JSON.parse(localStorage.getItem("cortiq_form") || "{}").pricing || 1)).toLocaleString()
-              : "—"} sub="units/mo needed" color={YELLOW} />
+            <Stat label="Break-even Units" value={breakEvenUnits} sub="units/mo needed" color={YELLOW} />
             {compare && <Stat label="Runway B" value={`${runwayMonthB}mo`} sub={`${runwayMonthB - runwayMonthA > 0 ? "+" : ""}${runwayMonthB - runwayMonthA}mo vs A`} color={statusColor(runwayMonthB)} />}
           </div>
 
@@ -266,7 +251,6 @@ export default function SimulatePage() {
                   <XAxis dataKey="month" stroke="rgba(255,255,255,0.1)" tick={{ fontFamily: "'Space Mono',monospace", fontSize: 9, fill: "rgba(255,255,255,0.25)" }} interval={2} />
                   <YAxis stroke="rgba(255,255,255,0.1)" tick={{ fontFamily: "'Space Mono',monospace", fontSize: 9, fill: "rgba(255,255,255,0.25)" }} tickFormatter={v => fmt(v)} width={60} />
                   <Tooltip content={<ChartTip />} />
-                  {/* zero line */}
                   <ReferenceLine y={0} stroke={RED} strokeDasharray="4 4" strokeOpacity={0.4} />
                   {compare ? (
                     <>
