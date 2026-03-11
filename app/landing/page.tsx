@@ -349,7 +349,7 @@ export default function LandingPage() {
 
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
           {FEATURES.map((f, i) => (
-            <div key={f.title} className="feature-card" style={{ "--card-color": f.color } as any, animationDelay:`${i*0.08}s` }>
+            <div key={f.title} className="feature-card" style={{ "--card-color": f.color, animationDelay:`${i*0.08}s` } as any}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
                 <div style={{ width:44, height:44, borderRadius:12, background:`${f.color}15`, border:`1px solid ${f.color}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>{f.icon}</div>
                 <span style={{ fontFamily:"'Space Mono',monospace", fontSize:8, color:f.color, background:`${f.color}10`, border:`1px solid ${f.color}20`, borderRadius:4, padding:"3px 8px", letterSpacing:"0.1em" }}>{f.stat}</span>
@@ -489,174 +489,40 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-{/* ── CTA BOTTOM ─────────────────────────────────────────────────── */}
-<section
-  className="grid-bg"
-  style={{
-    padding: "120px 24px",
-    textAlign: "center",
-    position: "relative",
-    overflow: "hidden",
-  }}
->
-  {/* background glow */}
-  <div
-    style={{
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%,-50%)",
-      width: 800,
-      height: 400,
-      background:
-        "radial-gradient(ellipse, rgba(200,255,0,0.06) 0%, transparent 70%)",
-      pointerEvents: "none",
-    }}
-  />
 
-  <div style={{ position: "relative", zIndex: 1 }}>
-    <span
-      className="tag"
-      style={{
-        marginBottom: 24,
-        display: "inline-block",
-      }}
-    >
-      Get started today
-    </span>
+      {/* ── CTA BOTTOM ─────────────────────────────────────────────────── */}
+      <section className="grid-bg" style={{ padding:"140px 48px", textAlign:"center", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:800, height:400, background:`radial-gradient(ellipse,rgba(200,255,0,0.06) 0%,transparent 70%)`, pointerEvents:"none" }} />
+        <div style={{ position:"relative", zIndex:1 }}>
+          <span className="tag" style={{ marginBottom:24, display:"inline-block" }}>Get started today</span>
+          <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:"clamp(36px,5vw,72px)", letterSpacing:"-0.03em", lineHeight:1.05, marginBottom:24 }}>
+            Stop guessing.<br />
+            <span style={{ color:ACCENT, fontFamily:"'DM Serif Display',serif", fontStyle:"italic", fontWeight:400 }}>Start knowing.</span>
+          </h2>
+          <p style={{ fontFamily:"'Space Mono',monospace", fontSize:12, color:"rgba(255,255,255,0.35)", marginBottom:48, maxWidth:400, margin:"0 auto 48px", lineHeight:1.8 }}>
+            Your startup health score is waiting. Free to use. No credit card. Results in 60 seconds.
+          </p>
+          <button className="cta-primary" style={{ fontSize:14, padding:"18px 40px" }} onClick={() => router.push("/login")}>
+            ⬡ Analyze my startup for free
+          </button>
+        </div>
+      </section>
 
-    <h2
-      style={{
-        fontFamily: "'Syne',sans-serif",
-        fontWeight: 800,
-        fontSize: "clamp(36px,5vw,72px)",
-        letterSpacing: "-0.03em",
-        lineHeight: 1.05,
-        marginBottom: 24,
-      }}
-    >
-      Stop guessing.
-      <br />
-      <span
-        style={{
-          color: ACCENT,
-          fontFamily: "'DM Serif Display',serif",
-          fontStyle: "italic",
-          fontWeight: 400,
-        }}
-      >
-        Start knowing.
-      </span>
-    </h2>
-
-    <p
-      style={{
-        fontFamily: "'Space Mono',monospace",
-        fontSize: 12,
-        color: "rgba(255,255,255,0.45)",
-        maxWidth: 420,
-        margin: "0 auto 48px",
-        lineHeight: 1.8,
-      }}
-    >
-      Your startup health score is waiting. Free to use. No credit card.
-      Results in 60 seconds.
-    </p>
-
-    <button
-      className="cta-primary"
-      style={{
-        fontSize: 14,
-        padding: "18px 42px",
-      }}
-      onClick={() => router.push("/login")}
-    >
-      ⬡ Analyze my startup for free
-    </button>
-  </div>
-</section>
-
-{/* ── FOOTER ─────────────────────────────────────────────────────── */}
-<footer
-  style={{
-    borderTop: "1px solid rgba(255,255,255,0.06)",
-    padding: "36px 24px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 20,
-  }}
->
-  {/* logo */}
-  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-    <div
-      style={{
-        width: 24,
-        height: 24,
-        borderRadius: "50%",
-        background: ACCENT,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 10,
-        color: "black",
-        fontWeight: 700,
-      }}
-    >
-      ⬡
-    </div>
-
-    <span
-      style={{
-        fontFamily: "'Syne',sans-serif",
-        fontWeight: 800,
-        fontSize: 14,
-        color: "white",
-        letterSpacing: "0.05em",
-      }}
-    >
-      CORTIQ
-    </span>
-  </div>
-
-  {/* copyright */}
-  <span
-    style={{
-      fontFamily: "'Space Mono',monospace",
-      fontSize: 9,
-      color: "rgba(255,255,255,0.25)",
-      letterSpacing: "0.1em",
-      textAlign: "center",
-    }}
-  >
-    © 2025 CORTIQ · AI STARTUP INTELLIGENCE
-  </span>
-
-  {/* links */}
-  <div style={{ display: "flex", gap: 20 }}>
-    {["Privacy", "Terms", "Contact"].map((l) => (
-      <button
-        key={l}
-        style={{
-          fontFamily: "'Space Mono',monospace",
-          fontSize: 10,
-          color: "rgba(255,255,255,0.35)",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          letterSpacing: "0.1em",
-          transition: "color 0.2s",
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.color = "white")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.color = "rgba(255,255,255,0.35)")
-        }
-      >
-        {l}
-      </button>
-    ))}
-  </div>
-</footer>
+      {/* ── FOOTER ─────────────────────────────────────────────────────── */}
+      <footer style={{ borderTop:"1px solid rgba(255,255,255,0.06)", padding:"40px 48px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:24, height:24, borderRadius:"50%", background:ACCENT, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10 }}>⬡</div>
+          <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:14, color:"white" }}>CORTIQ</span>
+        </div>
+        <span style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color:"rgba(255,255,255,0.2)", letterSpacing:"0.1em" }}>
+          © 2025 CORTIQ · AI STARTUP INTELLIGENCE
+        </span>
+        <div style={{ display:"flex", gap:20 }}>
+          {["Privacy", "Terms", "Contact"].map(l => (
+            <button key={l} style={{ fontFamily:"'Space Mono',monospace", fontSize:9, color:"rgba(255,255,255,0.25)", background:"none", border:"none", cursor:"pointer", letterSpacing:"0.1em" }}>{l}</button>
+          ))}
+        </div>
+      </footer>
+    </>
+  );
+}
