@@ -103,8 +103,16 @@ export default function LandingPage() {
     return () => { window.removeEventListener("mousemove", handleMouse); window.removeEventListener("scroll", handleScroll); };
   }, []);
 
-  const ROTATING_WORDS = ["Intelligence", "Diagnostics", "Clarity", "Advantage", "Readiness"];
-  const currentWord = ROTATING_WORDS[tick % ROTATING_WORDS.words];
+ 
+  const ROTATING_WORDS = [
+    "Intelligence",
+    "Diagnostics",
+    "Clarity",
+    "Advantage",
+    "Readiness"
+  ];
+  
+  const currentWord = ROTATING_WORDS[tick % ROTATING_WORDS.length];
 
   return (
     <>
