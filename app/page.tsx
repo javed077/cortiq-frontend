@@ -588,3 +588,84 @@ export default function Home() {
     </>
   );
 }
+// ── ADD THIS FUNCTION inside your main page.tsx component ─────────────────────
+// Call it right after you set your analysis results in state.
+// Place it just before your return() statement.
+
+function saveToHistory(result: any, formData: any) {
+  if (!result?.health_score) return;
+
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  // load existing history
+  const existing: any[] = JSON.parse(localStorage.getItem("cortiq_history") || "[]");
+
+  // don't double-save on the same day
+  if (existing.length > 0 && existing[existing.length - 1].date === todayStr) {
+    // update today's entry instead of adding a duplicate
+    existing[existing.length - 1] = {
+      date:               todayStr,
+      health_score:       result.health_score       || 0,
+      market_health:      result.market_health      || 0,
+      execution_health:   result.execution_health   || 0,
+      finance_health:     result.finance_health     || 0,
+      growth_health:      result.growth_health      || 0,
+      competition_health: result.competition_health || 0,
+      runway_months:      result.runway_months      || 0,
+      idea:               formData.idea             || "My Startup",
+    };
+  } else {
+    existing.push({
+      date:               todayStr,
+      health_score:       result.health_score       || 0,
+      market_health:      result.market_health      || 0,
+      execution_health:   result.execution_health   || 0,
+      finance_health:     result.finance_health     || 0,
+      growth_health:      result.growth_health      || 0,
+      competition_health: result.competition_health || 0,
+      runway_months:      result.runway_months      || 0,
+      idea:               formData.idea             || "My Startup",
+    });
+  }
+
+  localStorage.setItem("cortiq_history", JSON.stringify(existing));
+
+  // update streak
+  const savedStreak = localStorage.getItem("cortiq_streak");
+  const streak = savedStreak
+    ? JSON.parse(savedStreak)
+    : { current: 0, longest: 0, lastCheckin: "", totalCheckins: 0 };
+
+  const lastDate = streak.lastCheckin;
+  const daysDiff = lastDate
+    ? Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000)
+    : 999;
+
+  if (daysDiff > 0) { // not already checked in today
+    let current = daysDiff <= 7 ? streak.current + 1 : 1;
+    const longest = Math.max(streak.longest, current);
+    const updated = {
+      current,
+      longest,
+      lastCheckin:   todayStr,
+      totalCheckins: streak.totalCheckins + 1,
+    };
+    localStorage.setItem("cortiq_streak", JSON.stringify(updated));
+  }
+}
+
+// ── WHERE TO CALL IT in page.tsx ───────────────────────────────────────────────
+// Find your handleSubmit / analyze function where you call the API.
+// After you receive the result and call setResult(...), add:
+//
+//   saveToHistory(data.result, formValues);
+//
+// Example — your existing code probably looks something like:
+//
+//   const [investorScore, marketResearch, strategy] = await Promise.all([...]);
+//   setResult(data);
+//   localStorage.setItem("cortiq_result", JSON.stringify({ result: data, ... }));
+//   // ↓ ADD THIS LINE right here:
+//   saveToHistory(data, formValues);
+//
+// That's it. The progress page reads cortiq_history automatically on mount.
