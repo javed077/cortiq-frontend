@@ -18,10 +18,10 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.href = "/";
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) window.location.href = "/";
       else setChecking(false);
-    });
+    }).catch(() => setChecking(false));
   }, []);
 
   async function signInWithGoogle() {

@@ -1,11 +1,12 @@
 "use client";
 
-// frontend/lib/supabase.ts
-// Uses @supabase/ssr — the modern replacement for auth-helpers-nextjs
-
 import { createBrowserClient } from "@supabase/ssr";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+
+// ── singleton browser client ──────────────────────────────────────────────────
+// createBrowserClient is safe to call multiple times — it returns the same
+// instance per URL+key pair, so no risk of multiple GoTrueClient warnings.
 
 export function createClient() {
   return createBrowserClient(
@@ -14,6 +15,7 @@ export function createClient() {
   );
 }
 
+// named export for convenience in login page etc.
 export const supabase = createClient();
 
 // ── useUser hook ──────────────────────────────────────────────────────────────
@@ -24,20 +26,21 @@ export function useUser() {
   useEffect(() => {
     const client = createClient();
 
-    client.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-    });
+    // getUser() instead of getSession() — avoids refresh_token_not_found errors
+    // when there is no active session (e.g. first visit, cleared cookies)
+    client.auth.getUser()
+      .then(({ data }) => setUser(data.user ?? null))
+      .catch(() => setUser(null));   // silently handle no-session case
 
-    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    const { data: { subscription } } = client.auth.onAuthStateChange(
+      (_event, session) => setUser(session?.user ?? null)
+    );
 
     return () => subscription.unsubscribe();
   }, []);
 
   async function signOut() {
-    const client = createClient();
-    await client.auth.signOut();
+    await createClient().auth.signOut();
     window.location.href = "/login";
   }
 

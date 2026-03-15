@@ -1,12 +1,13 @@
-// middleware.ts ← root of project (next to package.json)
+// proxy.ts  <- project root, next to package.json
+// Next.js 16 uses "proxy" convention instead of "middleware"
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/auth/callback", "/landing"];
+const PUBLIC_ROUTES = ["/login", "/auth/callback", "/landing", "/mentor"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   let res = NextResponse.next({ request: { headers: req.headers } });
 
   const supabase = createServerClient(
@@ -25,19 +26,17 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
 
-  const isPublic = PUBLIC_ROUTES.some(route =>
-    req.nextUrl.pathname.startsWith(route)
-  );
+  const isPublic = PUBLIC_ROUTES.some(r => req.nextUrl.pathname.startsWith(r));
 
-  if (!session && !isPublic) {
+  if (!user && !isPublic) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("next", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (session && req.nextUrl.pathname === "/login") {
+  if (user && req.nextUrl.pathname === "/login") {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
@@ -46,6 +45,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.svg).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.svg|.*\\.ico|.*\\.jpg).*)",
   ],
 };
