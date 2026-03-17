@@ -5,11 +5,6 @@ const nextConfig: NextConfig = {
   // ── Fix: Turbopack root warning ───────────────────────────────────────────
   // Multiple lockfiles detected (root + frontend/).
   // Tell Turbopack the actual workspace root so it stops guessing.
-  experimental: {
-    turbo: {
-      root: path.resolve(__dirname),
-    },
-  },
 
   // ── Fix: middleware → proxy rename (Next.js 15+) ─────────────────────────
   // The file is still called middleware.ts but Next.js 16 shows a deprecation

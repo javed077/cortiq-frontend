@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 
 type ResultType = {
@@ -324,17 +325,29 @@ export default function Home() {
 
       let data: any = fallbackResult;
       try {
+        // Get Supabase session token
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token ?? "";
+
         const res = await fetchWithTimeout(`${API}/dashboard/analyze`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify(payload),
         }, 30000);
         data = await res.json();
+
+        // Store idea_id if returned
+        if (data.idea_id) {
+          localStorage.setItem("cortiq_last_idea_id", data.idea_id);
+        }
       } catch (e) {
         console.error("dashboard/analyze failed:", e);
         setError("Backend unreachable — showing estimated scores. Check that your server is running.");
       }
-
       setResult(data);
       saveToHistory(data, form);
       setSuccessProb(Math.round(

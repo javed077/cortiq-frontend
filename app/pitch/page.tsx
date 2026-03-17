@@ -212,10 +212,29 @@ export default function PitchPage() {
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 12, marginTop: 28, flexDirection: isMobile ? "column" : "row", justifyContent: "center" }}>
-            <button className="nav-btn" onClick={() => router.push("/simulate")} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}>← Burn Simulator</button>
-            <button className="nav-btn" onClick={() => router.push("/export")} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}>← Export PDF</button>
-          </div>
+<div
+  style={{
+    display: "flex",
+    gap: 12,
+    marginTop: 28,
+    justifyContent: "center",
+    flexWrap: "wrap",
+  }}
+>
+  <button
+    className="secondary-btn"
+    onClick={() => router.push("/simulate")}
+  >
+    ← Back to Simulator
+  </button>
+
+  <button
+    className="secondary-btn"
+    onClick={() => router.push("/")}
+  >
+    ← Dashboard
+  </button>
+</div>
 
           <div style={{ marginTop: 48, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", gap: 8 }}>
             <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 9, color: "rgba(255,255,255,0.2)" }}>CORTIQ © 2025</span>
